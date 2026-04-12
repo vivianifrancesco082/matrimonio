@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Servizio PHP 8.3 + Apache
+  web:
+    build:
+      context: .
+      dockerfile: ./php/Dockerfile
+    container_name: php83_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ../:/var/www/html
+    networks:
+      - progetto_network
+
+  # Servizio MySQL 8.0
+  db:
+    image: mysql:8.0
+    container_name: php83_db
+    # Specifichiamo la piattaforma per evitare errori su Mac M1/M2
+    platform: linux/arm64
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: matrimonio
+      MYSQL_USER: matrimonio_user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - progetto_network
+
+  # Servizio phpMyAdmin (Interfaccia Grafica)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: php83_phpmyadmin
+    platform: linux/arm64
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - "8081:80"
+    networks:
+      - progetto_network
+
+networks:
+  progetto_network:
+    driver: bridge
+
+volumes:
+  db_data:

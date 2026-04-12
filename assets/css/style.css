@@ -152,7 +152,7 @@ body {
 }
 .hero-eyebrow {
   font-family: 'Josefin Sans', sans-serif;
-  font-weight: 300; font-size: 0.65rem;
+  font-weight: 400; font-size: 0.65rem;
   letter-spacing: 0.45em; text-transform: uppercase;
   color: var(--mauve); margin-bottom: 1.2rem;
   opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
@@ -165,14 +165,14 @@ body {
 }
 .hero-names .amp {
   display: block;
-  font-size: 0.35em;
+  font-size: 0.5em;
   color: var(--charcoal);
   font-family: "Mr De Haviland", cursive;font-weight: 400; font-style: normal;
   margin: 0.2em 0;
 }
 .hero-date {
   font-family: 'Josefin Sans', sans-serif;
-  font-weight: 300; font-size: 0.78rem;
+  font-weight: 300; font-size: 0.85rem;
   letter-spacing: 0.35em; text-transform: uppercase;
   color: var(--charcoal-light); margin-top: 1.5rem;
   opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards;
@@ -246,7 +246,7 @@ body {
 }
 .countdown-label {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem; font-style: italic;
+  font-size: 1.36rem; font-style: italic; font-weight: 400;
   color: var(--mauve); margin-bottom: 2rem;
 }
 .countdown {
@@ -338,7 +338,7 @@ body {
 .section-header { text-align: center; margin-bottom: 3rem; }
 .section-eyebrow {
   font-family: 'Josefin Sans', sans-serif;
-  font-weight: 300; font-size: 0.6rem;
+  font-weight: 600; font-size: 0.8rem;
   letter-spacing: 0.45em; text-transform: uppercase;
   color: var(--mauve); margin-bottom: 0.8rem;
 }
@@ -544,7 +544,7 @@ body {
 
   .hero { min-height: 700px; }
   .hero-logo { width: 220px; }
-  .hero-names .amp { display: inline-block; margin: 0 0.3em; font-size: 0.4em; }
+  .hero-names .amp { display: inline-block; margin: 0 0.3em; font-size: 0.5em; }
 
   .countdown { max-width: 500px; gap: 1rem; }
   .countdown-number { font-size: 3.2rem; }

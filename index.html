@@ -13,6 +13,107 @@
 </head>
 <body>
 
+<!-- MODALE BENVENUTO -->
+<div id="welcomeModal" class="welcome-modal" style="display:none" aria-modal="true" role="dialog" aria-labelledby="welcomeTitle">
+  <div class="welcome-modal__backdrop"></div>
+  <div class="welcome-modal__box">
+    <div class="welcome-modal__ornament">✦</div>
+    <p class="welcome-modal__label">Benvenuti</p>
+    <h2 class="welcome-modal__family" id="welcomeTitle"></h2>
+    <div class="welcome-modal__divider"></div>
+    <p class="welcome-modal__subtitle">Siete invitati a celebrare con noi</p>
+    <button class="welcome-modal__btn" id="welcomeOk">OK</button>
+  </div>
+</div>
+
+<style>
+.welcome-modal {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+}
+.welcome-modal__backdrop {
+  position: absolute; inset: 0;
+  background: rgba(58, 53, 53, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.welcome-modal__box {
+  position: relative; z-index: 1;
+  background: var(--cream-light);
+  border: 1px solid var(--gold-light);
+  border-radius: 4px;
+  padding: 2.8rem 2.4rem 2.4rem;
+  max-width: 360px; width: calc(100% - 2.4rem);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(58, 53, 53, 0.18);
+  animation: modalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.welcome-modal__ornament {
+  color: var(--gold); font-size: 1rem; letter-spacing: 0.4em;
+  margin-bottom: 1.2rem; opacity: 0.7;
+}
+.welcome-modal__label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem; font-weight: 400;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--charcoal-light); margin-bottom: 0.8rem;
+}
+.welcome-modal__family {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2rem; font-weight: 400; font-style: italic;
+  color: var(--mauve-dark); line-height: 1.25;
+  margin-bottom: 0;
+}
+.welcome-modal__divider {
+  width: 40px; height: 1px;
+  background: var(--gold); margin: 1.2rem auto;
+}
+.welcome-modal__subtitle {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 300;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--charcoal-light); margin-bottom: 2rem;
+}
+.welcome-modal__btn {
+  display: inline-block;
+  padding: 0.7rem 2.4rem;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--charcoal);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 400;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.25s, color 0.25s;
+}
+.welcome-modal__btn:hover {
+  background: var(--gold); color: var(--cream-light);
+}
+</style>
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var famiglia = params.get('famiglia');
+  if (famiglia) {
+    var modal = document.getElementById('welcomeModal');
+    document.getElementById('welcomeTitle').textContent = famiglia;
+    document.getElementById('rsvpTitle').textContent = famiglia;
+    modal.style.display = 'flex';
+    document.getElementById('welcomeOk').addEventListener('click', function() {
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s';
+      setTimeout(function() { modal.style.display = 'none'; }, 300);
+    });
+  }
+})();
+</script>
+
 <!-- NAV -->
 <div class="nav-bar" id="navBar">
   <a href="#home" class="nav-brand"></a>
@@ -61,7 +162,7 @@
 
 <!-- COUNTDOWN -->
 <section class="countdown-section" id="countdown">
-  <p class="countdown-label">Mancano</p>
+  <p class="section-eyebrow">Mancano</p>
   <div class="countdown">
     <div class="countdown-item">
       <span class="countdown-number" id="cd-days">---</span>
@@ -229,13 +330,17 @@
 <section class="rsvp-section" id="rsvp">
   <div class="rsvp-content">
     <div class="section-header reveal">
+      <p id="rsvpTitle"></p>
       <p class="section-eyebrow">Conferma la tua presenza</p>
       <h2 class="section-title">RSVP</h2>
       <div class="section-line"></div>
     </div>
-    <p class="rsvp-text reveal">
-      Saremo felicissimi di condividere questo giorno speciale con te.<br>
-      Ti chiediamo di confermare la tua presenza entro il 30 Giugno 2026.
+    <p class="rsvp-text reveal" style="font-size: 1.3em;">
+      Il valore di un momento è dato dalle persone con cui lo condividi.
+      <br>
+      Unitevi a noi per dare voce all'emozioni e festeggiare l'amore che ci ha uniti.<br>
+    <br><br>
+      
     </p>
     <button class="rsvp-btn reveal" onclick="alert('Funzionalità RSVP — da collegare')">
       Conferma Presenza
