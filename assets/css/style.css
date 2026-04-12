@@ -163,8 +163,7 @@ body {
   color: var(--charcoal); line-height: 1.2;
   opacity: 0; animation: fadeUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
 }
-.hero-names .amp {
-  display: block;
+.amp {
   font-size: 0.5em;
   color: var(--charcoal);
   font-family: "Mr De Haviland", cursive;font-weight: 400; font-style: normal;
@@ -172,7 +171,7 @@ body {
 }
 .hero-date {
   font-family: 'Josefin Sans', sans-serif;
-  font-weight: 300; font-size: 0.85rem;
+  font-weight: 400; font-size: 0.95rem;
   letter-spacing: 0.35em; text-transform: uppercase;
   color: var(--charcoal-light); margin-top: 1.5rem;
   opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards;
@@ -341,6 +340,7 @@ body {
   font-weight: 600; font-size: 0.8rem;
   letter-spacing: 0.45em; text-transform: uppercase;
   color: var(--mauve); margin-bottom: 0.8rem;
+  line-height: 1.3rem;
 }
 .section-title {
   font-family: 'Pinyon Script', cursive;
@@ -466,7 +466,8 @@ body {
 }
 .detail-time {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem; color: var(--mauve); margin-top: 0.4rem;
+  font-weight: 600;
+  font-size: 1.3rem; color: var(--mauve); margin-top: 0.4rem;
 }
 
 /* ══════════════════════════════════════
@@ -474,7 +475,7 @@ body {
    ══════════════════════════════════════ */
 .rsvp-section {
   background: var(--charcoal); color: var(--cream);
-  text-align: center; padding: 5rem 1.5rem;
+  text-align: center; padding: 4.3rem 1.5rem;
   position: relative; overflow: hidden;
 }
 .rsvp-section::before {
@@ -489,10 +490,10 @@ body {
 .rsvp-section .section-line { background: var(--gold); }
 .rsvp-text {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.05rem; font-style: italic;
+  font-size: 0.95rem; font-style: italic;
   color: var(--mauve-light); margin-bottom: 2.5rem;
   max-width: 340px; margin-left: auto; margin-right: auto;
-  line-height: 1.7;
+  line-height: 1.5rem;
 }
 .rsvp-btn {
   display: inline-block;
@@ -515,15 +516,25 @@ body {
    ══════════════════════════════════════ */
 .footer {
   padding: 2.5rem 1.5rem;
-  text-align: center; background: var(--cream);
+  text-align: center; background: #bdb294;
 }
 .footer-monogram {
   font-family: 'Pinyon Script', cursive;
   font-size: 2rem; color: var(--mauve); margin-bottom: 0.8rem;
 }
 .footer-text {
-  font-size: 0.6rem; letter-spacing: 0.3em;
+  font-size: 1rem; letter-spacing: 0.3em;
+  font-weight: 600;
   text-transform: uppercase; color: var(--charcoal-light); opacity: 0.5;
+}
+.textarea-note {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.9rem;
+    color:#333;
+    padding: 10px;
+    width: 80%;
+    height: 120px;
+    margin: 20px;
 }
 
 /* ══════════════════════════════════════
@@ -551,7 +562,7 @@ body {
 
   .parallax-wrap { height: 65vh; }
   .parallax-quote { max-width: 500px; }
-  .parallax-quote p { font-size: 1.5rem; }
+  .parallax-quote p { font-size: 1.5rem; line-height: 0.8rem; }
 
   .section { padding: 6rem 2rem; }
 
@@ -587,4 +598,77 @@ body {
 @media (min-width: 1024px) {
   .parallax-quote p { font-size: 1.8rem; }
   .parallax-quote { max-width: 600px; }
+}
+
+
+.welcome-modal {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+}
+.welcome-modal__backdrop {
+  position: absolute; inset: 0;
+  background: rgba(58, 53, 53, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.welcome-modal__box {
+  position: relative; z-index: 1;
+  background: var(--cream-light);
+  border: 1px solid var(--gold-light);
+  border-radius: 4px;
+  padding: 2.8rem 2.4rem 2.4rem;
+  max-width: 360px; width: calc(100% - 2.4rem);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(58, 53, 53, 0.18);
+  animation: modalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.welcome-modal__ornament {
+  color: var(--gold); font-size: 1rem; letter-spacing: 0.4em;
+  margin-bottom: 1.2rem; opacity: 0.7;
+}
+.welcome-modal__label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem; font-weight: 400;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--charcoal-light); margin-bottom: 0.8rem;
+}
+.welcome-modal__family {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2rem; font-weight: 400; font-style: italic;
+  color: var(--mauve-dark); line-height: 1.25;
+  margin-bottom: 0;
+}
+.welcome-modal__divider {
+  width: 40px; height: 1px;
+  background: var(--gold); margin: 1.2rem auto;
+}
+.welcome-modal__subtitle {
+    line-height: 1.3rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 300;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--charcoal-light); margin-bottom: 2rem;
+}
+.welcome-modal__btn {
+  display: inline-block;
+  padding: 0.7rem 2.4rem;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--charcoal);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 400;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.25s, color 0.25s;
+}
+.welcome-modal__btn:hover {
+  background: var(--gold); color: var(--cream-light);
+}
+.invitati {
+    padding: 0px 0px 20px 0px;
 }
