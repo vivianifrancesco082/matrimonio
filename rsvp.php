@@ -66,7 +66,7 @@ if (empty($token)) {
                 }
 
                 $db->commit();
-                $messaggio = 'Grazie! La vostra risposta è stata registrata.';
+                $messaggio = 'Grazie! La risposta è stata registrata.';
                 $gia_risposto = true;
 
                 // Ricarica i dati aggiornati
@@ -122,6 +122,7 @@ if (empty($token)) {
     <?php else: ?>
         <form method="POST" id="rsvpForm">
             <?php foreach ($rows as $r): ?>
+                <div class="invitato-nome"><?= htmlspecialchars($r['nome'] . ' ' . $r['cognome']) ?></div>
             <div class="invitato-card">
                 <div class="radio-group">
                     <div class="radio-option">

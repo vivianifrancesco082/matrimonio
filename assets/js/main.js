@@ -4,7 +4,6 @@
   if (famiglia) {
     var modal = document.getElementById('welcomeModal');
     document.getElementById('welcomeTitle').textContent = famiglia;
-    document.getElementById('rsvpTitle').textContent = famiglia;
     modal.style.display = 'flex';
     document.getElementById('welcomeOk').addEventListener('click', function() {
       modal.style.opacity = '0';
@@ -147,3 +146,113 @@ window.addEventListener('scroll', () => {
 document.querySelectorAll('.gallery-item').forEach((el, i) => { el.style.transitionDelay = (i * 0.08) + 's'; });
 document.querySelectorAll('.detail-card').forEach((el, i) => { el.style.transitionDelay = (i * 0.08) + 's'; });
 document.querySelectorAll('.timeline-item').forEach((el, i) => { el.style.transitionDelay = (i * 0.1) + 's'; });
+
+// ─── RSVP AJAX ───
+(function() {
+  const form = document.getElementById('rsvpForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (!token) return;
+
+    // Controlla se ci sono ospiti confermati con la textarea vuota
+    const noteWarning = document.getElementById('rsvpNoteWarning');
+    if (!noteWarning) {
+      const emptyNotes = Array.from(form.querySelectorAll('.invitato-card')).filter(function(card) {
+        const radio = card.querySelector('input[type="radio"][value="1"]');
+        const textarea = card.querySelector('textarea');
+        return radio && radio.checked && textarea && textarea.value.trim() === '';
+      });
+
+      if (emptyNotes.length > 0) {
+        const nomi = emptyNotes.map(function(card) {
+          return card.previousElementSibling
+            ? card.previousElementSibling.textContent.trim()
+            : '';
+        }).filter(Boolean);
+
+        const warn = document.createElement('div');
+        warn.id = 'rsvpNoteWarning';
+        warn.className = 'messaggio errore';
+        warn.innerHTML =
+          '<strong>Hai dimenticato di inserire note o allergie?</strong><br>'
+          + 'Se hai allergie o esigenze alimentari indicale nel campo apposito.<br><br>'
+          + 'Altrimenti Conferma semplicemente!';
+
+        const btn = form.querySelector('.rsvp-btn');
+        form.insertBefore(warn, btn);
+
+        document.getElementById('rsvpTorna').addEventListener('click', function() {
+          warn.remove();
+          emptyNotes[0].querySelector('textarea').focus();
+        });
+
+        document.getElementById('rsvpProcedi').addEventListener('click', function() {
+          warn.remove();
+          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        });
+
+        return;
+      }
+    } else {
+      noteWarning.remove();
+    }
+
+    const btn = form.querySelector('.rsvp-btn');
+    btn.disabled = true;
+    btn.textContent = 'Invio in corso…';
+
+    fetch('rsvp_action.php?token=' + encodeURIComponent(token), {
+      method: 'POST',
+      body: new FormData(form),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        const wrapper = form.closest('div') || form.parentElement;
+
+        if (!data.ok) {
+          const err = document.createElement('div');
+          err.className = 'messaggio errore';
+          err.textContent = data.error || 'Errore imprevisto. Riprova.';
+          wrapper.insertBefore(err, form);
+          btn.disabled = false;
+          btn.textContent = 'Conferma la risposta';
+          return;
+        }
+
+        // Costruisce la UI di conferma senza ricaricare la pagina
+        let html = '<div class="messaggio successo">Grazie! La risposta è stata registrata.</div>';
+        data.invitati.forEach(function(inv) {
+          const badge = inv.confermato
+            ? '<span class="stato-badge confermato">✓ Confermato</span>'
+            : '<span class="stato-badge declinato">✗ Non parteciperà</span>';
+          const note = inv.note
+            ? '<div class="note-readonly">' + escHtml(inv.note) + '</div>'
+            : '';
+          html += '<div class="invitato-card">'
+            + '<div class="invitato-nome">' + escHtml(inv.nome + ' ' + inv.cognome) + '</div>'
+            + badge + note
+            + '</div>';
+        });
+        html += '<div class="lock-notice">La risposta è stata registrata e non può essere modificata.</div>';
+
+        wrapper.innerHTML = html;
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Conferma la risposta';
+        alert('Errore di rete. Controlla la connessione e riprova.');
+      });
+  });
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+})();

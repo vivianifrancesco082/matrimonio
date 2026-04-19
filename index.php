@@ -15,26 +15,31 @@
 <body>
 
   <?php
+    $hidden_info = false;
     $orario_invitati = "16:00";
     $orario_rito = "16:30";
     $orario_cena = "20:00";
     $orario_torta = "21:30";
 
     $famiglia = $_GET['famiglia'] ?? '';
-    if($famiglia && str_contains($famiglia, " e ")){
+    $token = $_GET['token'] ?? '';
+    if($token && $famiglia && str_contains($famiglia, " e ")){
       $invito_modal = "Siete invitati a <br>celebrare con noi";
       $wellcome_modal = "Benvenuti";
       $confirm = "Confermate la vostra presenza";
-      $si_radio = "Si, ci saremo";
-      $no_radio = "Non parteciperemo";
+      $si_radio = "Si, ci sarò";
+      $no_radio = "Non posso partecipare";
     }
-    else {
+    elseif($token) {
       $invito_modal = "Sei invitato a <br>celebrare con noi";
       $wellcome_modal = "Benvenuto";
       $confirm = "Conferma la tua presenza";
       $si_radio = "Si, ci sarò";
       $no_radio = "Non posso partecipare";
-    }    
+    }   
+    else {
+      $hidden_info = true;
+    } 
   ?>
 
 <!-- MODALE BENVENUTO -->
@@ -227,7 +232,10 @@
     <div class="section-line"></div>
   </div>
   <div class="details-grid">
-    <div class="detail-card">
+    <?php 
+    if(!$hidden_info){
+      ?>
+      <div class="detail-card">
       <div class="detail-icon">
         <img src="assets/img/forte.png" width="52">
       </div>
@@ -255,6 +263,10 @@
       <h3 class="detail-title">Taglio della torta</h3>
       <p class="detail-time"><?= $orario_torta ?></p>
     </div>
+      <?php
+    }
+    ?>
+    
     
   </div>
 </section>
@@ -277,7 +289,6 @@
 <section class="rsvp-section" id="partecipazione">
   <div class="rsvp-content">
     <div class="section-header reveal">
-      <p id="rsvpTitle" class="invitati"></p>
       <p class="section-eyebrow"><?= $confirm ?></p>
 
       <div class="section-line"></div>

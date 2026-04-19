@@ -501,6 +501,7 @@ body {
   align-items: center;
   gap: 0.8rem;
   margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 .radio-option {
   display: flex;
@@ -522,7 +523,7 @@ body {
   color: var(--cream);
   cursor: pointer;
   line-height: 1;
-  padding: 5px;
+  padding: 2px;
 }
 
 .rsvp-btn {
@@ -564,7 +565,7 @@ body {
     padding: 10px;
     width: 80%;
     height: 120px;
-    margin: 20px;
+    margin: 5px 0px 40px 0px;
 }
 
 /* ══════════════════════════════════════
@@ -701,4 +702,28 @@ body {
 }
 .invitati {
     padding: 0px 0px 20px 0px;
+}
+.note-readonly {
+  padding: 8px 0;
+}
+.lock-notice {
+  font-size: 0.8rem;
+  padding: 8px 0px;
+}
+.messaggio {
+  margin-bottom: 10px
+}
+.stato-badge {
+  padding:10px 0px;
+  display: block;
+}
+.stato-badge.confermato {
+  color: #75dd75;
+}
+.stato-badge.declinato {
+  color:#dc5050;
+}
+.invitato-nome {
+  font-size: 1rem;
+  font-weight: 600;
 }
