@@ -179,8 +179,10 @@ switch ($filtro) {
 }
 
 if ($ricerca !== '') {
-    $where .= ' AND (i.nome LIKE :q OR i.cognome LIKE :q OR f.nome_famiglia LIKE :q)';
-    $params['q'] = '%' . $ricerca . '%';
+    $where .= ' AND (i.nome LIKE :q1 OR i.cognome LIKE :q2 OR f.nome_famiglia LIKE :q3)';
+    $params['q1'] = '%' . $ricerca . '%';
+    $params['q2'] = '%' . $ricerca . '%';
+    $params['q3'] = '%' . $ricerca . '%';
 }
 
 $stmt = $db->prepare("

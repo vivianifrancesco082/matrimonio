@@ -11,7 +11,7 @@ define('DB_PASS', 'password');
 define('ADMIN_PASSWORD', 'asd1982A!FRA');
 
 define('TITOLO', 'Francesco &amp; Serena — 27 Settembre 2026');
-define('SITOWEB', 'https://www.francescoeserena.it/');
+define('SITOWEB', 'http://localhost:8080/');
 define('PREFISSO_INTERNAZIONALE', '39');
 
 function getDB(): PDO {
