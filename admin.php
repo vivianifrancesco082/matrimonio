@@ -1,127 +1,30 @@
 <?php
 // ============================================
 // RSVP - Dashboard Admin
+// URL: admin.php (proteggi con .htaccess o auth)
 // ============================================
 
-session_start();
 require_once 'config.php';
+$sitoweb = SITOWEB;
+$prefisso = PREFISSO_INTERNAZIONALE;
 
-// ---- Logout ----
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: admin.php');
-    exit;
+function generaTokenUnivoco($db): string {
+    do {
+        $token = str_pad((string)random_int(0, 9999999999), 10, '0', STR_PAD_LEFT);
+        
+        // Verifica se esiste già nel database
+        $check = $db->prepare("SELECT COUNT(*) FROM famiglie WHERE token = ?");
+        $check->execute([$token]);
+        $exists = $check->fetchColumn();
+        
+    } while ($exists > 0);
+    return $token;
 }
 
-// ---- Login ----
-$login_errore = '';
-if (!isset($_SESSION['admin_logged_in'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_password'])) {
-        if ($_POST['admin_password'] === ADMIN_PASSWORD) {
-            $_SESSION['admin_logged_in'] = true;
-        } else {
-            $login_errore = 'Password errata.';
-        }
-    }
-
-    if (!isset($_SESSION['admin_logged_in'])) {
-        ?><!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — Accesso</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #1A1520; --bg-card: #231E29; --border: #3A3340;
-            --text: #E8E2ED; --text-muted: #9B8FA3;
-            --mauve: #C49AAA; --gold: #C4A265;
-            --decline: #C4837A; --decline-dim: rgba(196,131,122,0.12);
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-ui: 'DM Sans', system-ui, sans-serif;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font-ui);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 2.5rem 2rem;
-            width: 100%;
-            max-width: 360px;
-            text-align: center;
-        }
-        h1 {
-            font-family: var(--font-display);
-            font-size: 1.8rem;
-            color: var(--mauve);
-            margin-bottom: 0.3rem;
-        }
-        .subtitle { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 2rem; }
-        input[type="password"] {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font-ui);
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-            transition: border-color 0.2s;
-        }
-        input[type="password"]:focus { outline: none; border-color: var(--mauve); }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--gold);
-            color: #1A1520;
-            border: none;
-            border-radius: 8px;
-            font-family: var(--font-ui);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.85; }
-        .errore {
-            background: var(--decline-dim);
-            color: var(--decline);
-            border: 1px solid rgba(196,131,122,0.3);
-            border-radius: 8px;
-            padding: 0.6rem 1rem;
-            font-size: 0.88rem;
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<body>
-<div class="login-box">
-    <h1>Dashboard RSVP</h1>
-    <div class="subtitle">Francesco &amp; Serena — area riservata</div>
-    <?php if ($login_errore): ?>
-        <div class="errore"><?= htmlspecialchars($login_errore) ?></div>
-    <?php endif; ?>
-    <form method="POST">
-        <input type="password" name="admin_password" placeholder="Password" autofocus>
-        <button type="submit">Accedi</button>
-    </form>
-</div>
-</body>
-</html><?php
-        exit;
-    }
-}
+// ---- CONFIGURAZIONE LINK ----
+define('RSVP_BASE_URL', $sitoweb.'index.php');
+define('WA_MESSAGE', "Ciao! \nSiete invitati al matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConfermate la vostra presenza qui:\n{link}\n\nVi aspettiamo con gioia!");
+define('WA_MESSAGE_SINGLE', "Ciao! \nSei invitato/a al matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConferma la tua presenza qui:\n{link}\n\nTi aspettiamo con gioia!");
 
 $db = getDB();
 
@@ -176,8 +79,8 @@ if ($ricerca !== '') {
 }
 
 $stmt = $db->prepare("
-    SELECT f.nome_famiglia, f.token,
-           i.id, i.nome, i.cognome, i.confermato, i.note, i.risposto_at
+    SELECT f.nome_famiglia, f.token, f.telefono, f.nome_famiglia,
+           i.id, i.nome, i.cognome, i.confermato, i.note, i.risposto_at, i.famiglia_id
     FROM invitati i
     JOIN famiglie f ON f.id = i.famiglia_id
     WHERE {$where}
@@ -188,9 +91,24 @@ $invitati = $stmt->fetchAll();
 
 // Raggruppa per famiglia
 $famiglie = [];
+
 foreach ($invitati as $inv) {
-    $famiglie[$inv['nome_famiglia']]['token'] = $inv['token'];
-    $famiglie[$inv['nome_famiglia']]['membri'][] = $inv;
+    $nomeFamiglia = $inv['nome_famiglia'];
+    $tokenAttuale = $inv['token'];
+
+    if (empty($tokenAttuale)) {
+        $tokenAttuale = generaTokenUnivoco($db);
+        
+        $update = $db->prepare("UPDATE famiglie SET token = :token WHERE id = :id");
+        $update->execute([
+            'token' => $tokenAttuale,
+            'id'    => $inv['famiglia_id']
+        ]);
+        $inv['token'] = $tokenAttuale;
+    }
+    $famiglie[$nomeFamiglia]['token'] = $tokenAttuale;
+    $famiglie[$nomeFamiglia]['telefono'] = $inv['telefono'];
+    $famiglie[$nomeFamiglia]['membri'][] = $inv;
 }
 ?>
 <!DOCTYPE html>
@@ -198,306 +116,17 @@ foreach ($invitati as $inv) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin RSVP - Francesco &amp; Serena</title>
+    <title>Admin RSVP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #1A1520;
-            --bg-card: #231E29;
-            --bg-card-hover: #2B2531;
-            --border: #3A3340;
-            --text: #E8E2ED;
-            --text-muted: #9B8FA3;
-            --mauve: #C49AAA;
-            --gold: #C4A265;
-            --gold-dim: rgba(196, 162, 101, 0.15);
-            --success: #7EAF82;
-            --success-dim: rgba(126, 175, 130, 0.12);
-            --decline: #C4837A;
-            --decline-dim: rgba(196, 131, 122, 0.12);
-            --waiting: #A0A0B8;
-            --waiting-dim: rgba(160, 160, 184, 0.10);
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-ui: 'DM Sans', system-ui, sans-serif;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: var(--font-ui);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-
-        .dashboard {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .dash-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-        .logout-btn {
-            position: absolute;
-            right: 0;
-            top: 0;
-            padding: 0.4rem 0.9rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-muted);
-            font-family: var(--font-ui);
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .logout-btn:hover { border-color: var(--decline); color: var(--decline); }
-
-        .dash-header h1 {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--mauve);
-        }
-
-        .dash-header .subtitle {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.3rem;
-        }
-
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.2rem 1rem;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            font-family: var(--font-display);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .stat-card.totale .stat-number { color: var(--text); }
-        .stat-card.confermati .stat-number { color: var(--success); }
-        .stat-card.declinati .stat-number { color: var(--decline); }
-        .stat-card.attesa .stat-number { color: var(--waiting); }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            align-items: center;
-            margin-bottom: 1.2rem;
-        }
-
-        .filter-btn {
-            padding: 0.5rem 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-muted);
-            font-family: var(--font-ui);
-            font-size: 0.85rem;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--mauve);
-            color: var(--text);
-        }
-
-        .filter-btn.active {
-            background: var(--gold-dim);
-            border-color: var(--gold);
-            color: var(--gold);
-        }
-
-        .search-box {
-            margin-left: auto;
-        }
-
-        .search-box input {
-            padding: 0.5rem 0.8rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font-ui);
-            font-size: 0.85rem;
-            width: 200px;
-            transition: border-color 0.2s;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--mauve);
-        }
-
-        .search-box input::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* Famiglia card */
-        .famiglia-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-bottom: 0.8rem;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-
-        .famiglia-card:hover {
-            border-color: var(--mauve);
-        }
-
-        .famiglia-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.2rem;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .famiglia-nome {
-            font-family: var(--font-display);
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--mauve);
-        }
-
-        .famiglia-meta {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.03em;
-        }
-
-        .badge.confermato { background: var(--success-dim); color: var(--success); }
-        .badge.declinato { background: var(--decline-dim); color: var(--decline); }
-        .badge.attesa { background: var(--waiting-dim); color: var(--waiting); }
-
-        .toggle-icon {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-        }
-
-        .famiglia-card.open .toggle-icon {
-            transform: rotate(180deg);
-        }
-
-        .famiglia-body {
-            display: none;
-            border-top: 1px solid var(--border);
-            padding: 0.8rem 1.2rem;
-        }
-
-        .famiglia-card.open .famiglia-body {
-            display: block;
-        }
-
-        .membro-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid rgba(58, 51, 64, 0.5);
-        }
-
-        .membro-row:last-child {
-            border-bottom: none;
-        }
-
-        .membro-nome {
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-
-        .membro-note {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            font-style: italic;
-            margin-top: 0.2rem;
-        }
-
-        .membro-data {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-top: 0.2rem;
-        }
-
-        /* Famiglie info */
-        .famiglie-info {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-muted);
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .search-box { margin-left: 0; }
-            .search-box input { width: 100%; }
-            .filter-btn { text-align: center; }
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/admin.css">
 </head>
 <body>
 <div class="dashboard">
 
     <div class="dash-header">
-        <a href="?logout=1" class="logout-btn">Esci</a>
         <h1>Dashboard RSVP</h1>
-        <div class="subtitle">Francesco &amp; Serena — 27 Settembre 2026</div>
+        <div class="subtitle"><?php echo TITOLO; ?></div>
     </div>
 
     <!-- Stats -->
@@ -551,7 +180,7 @@ foreach ($invitati as $inv) {
     <div class="famiglia-card" onclick="this.classList.toggle('open')">
         <div class="famiglia-header">
             <div>
-                <span class="famiglia-nome"><?= htmlspecialchars($nome_fam) ?></span>
+                <span class="famiglia-nome"><?= htmlspecialchars($nome_fam) ?> - <small class="numero-tel"><?= $fam['telefono'] ?></small></span>
             </div>
             <div class="famiglia-meta">
                 <?php
@@ -599,10 +228,62 @@ foreach ($invitati as $inv) {
                 </div>
             </div>
             <?php endforeach; ?>
+
+            <?php
+            $rsvp_link = RSVP_BASE_URL . '?token=' . urlencode($fam['token']) . '&famiglia=' . urlencode($nome_fam);
+            $template = count($fam['membri']) === 1 ? WA_MESSAGE_SINGLE : WA_MESSAGE;
+            $wa_text = str_replace('{link}', $rsvp_link, $template);
+            $telefono = preg_replace('/[^0-9]/', '', $fam['telefono'] ?? '');
+            $wa_url = $telefono
+                ? 'https://wa.me/' . $prefisso . $telefono . '?text=' . rawurlencode($wa_text)
+                : '';
+            ?>
+            <div class="famiglia-actions">
+                <button class="action-btn copia" onclick="copiaLink(this, '<?= htmlspecialchars($rsvp_link, ENT_QUOTES) ?>')">
+                    📋 Copia link
+                </button>
+                <?php if ($wa_url): ?>
+                <a class="action-btn whatsapp" href="<?= htmlspecialchars($wa_url) ?>" target="_blank" rel="noopener">
+                    💬 Invia su WhatsApp
+                </a>
+                <?php else: ?>
+                <span class="action-btn whatsapp" style="opacity:0.4; cursor:default;" title="Numero di telefono mancante">
+                    💬 WhatsApp (no telefono)
+                </span>
+                <?php endif; ?>
+                <div class="link-preview"><?= htmlspecialchars($rsvp_link) ?></div>
+            </div>
         </div>
     </div>
     <?php endforeach; ?>
 
 </div>
+
+<script>
+function copiaLink(btn, link) {
+    navigator.clipboard.writeText(link).then(() => {
+        btn.classList.add('copiato');
+        btn.innerHTML = '✓ Copiato!';
+        setTimeout(() => {
+            btn.classList.remove('copiato');
+            btn.innerHTML = '📋 Copia link';
+        }, 2000);
+    }).catch(() => {
+        // Fallback per browser senza clipboard API
+        const tmp = document.createElement('textarea');
+        tmp.value = link;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        btn.classList.add('copiato');
+        btn.innerHTML = '✓ Copiato!';
+        setTimeout(() => {
+            btn.classList.remove('copiato');
+            btn.innerHTML = '📋 Copia link';
+        }, 2000);
+    });
+}
+</script>
 </body>
 </html>

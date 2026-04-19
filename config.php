@@ -8,8 +8,11 @@ define('DB_NAME', 'matrimonio');
 define('DB_USER', 'matrimonio_user');
 define('DB_PASS', 'password');
 
-// Password per l'area admin — cambiatela!
 define('ADMIN_PASSWORD', 'asd1982A!FRA');
+
+define('TITOLO', 'Francesco &amp; Serena — 27 Settembre 2026');
+define('SITOWEB', 'https://www.francescoeserena.it/');
+define('PREFISSO_INTERNAZIONALE', '39');
 
 function getDB(): PDO {
     static $pdo = null;
