@@ -118,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aggiu
 
     if (!$famiglia_id) {
         $errori[] = 'Seleziona una famiglia.';
-    } elseif ($nome === '' || $cognome === '') {
-        $errori[] = 'Nome e cognome sono obbligatori.';
+    } elseif ($nome === '') {
+        $errori[] = 'Nome è obbligatorio.';
     } else {
         $ins = $db->prepare("INSERT INTO invitati (famiglia_id, nome, cognome) VALUES (:fid, :nome, :cognome)");
         $ins->execute(['fid' => $famiglia_id, 'nome' => $nome, 'cognome' => $cognome]);
@@ -383,8 +383,8 @@ foreach ($tutti_invitati as $inv) {
                     <input type="text" name="nome" placeholder="Nome" required>
                 </div>
                 <div class="form-group">
-                    <label>Cognome *</label>
-                    <input type="text" name="cognome" placeholder="Cognome" required>
+                    <label>Cognome</label>
+                    <input type="text" name="cognome" placeholder="Cognome">
                 </div>
                 <button type="submit" class="btn-submit">+ Aggiungi invitato</button>
             </div>
