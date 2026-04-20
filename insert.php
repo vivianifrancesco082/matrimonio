@@ -85,6 +85,8 @@ $errori = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aggiungi_famiglia') {
     $nome_famiglia = trim($_POST['nome_famiglia'] ?? '');
     $telefono      = trim($_POST['telefono'] ?? '');
+    $lato          = $_POST['lato'] ?? '';
+    $lato          = in_array($lato, ['sposo', 'sposa']) ? $lato : null;
 
     if ($nome_famiglia === '') {
         $errori[] = 'Il nome della famiglia è obbligatorio.';
@@ -96,11 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aggiu
             $errori[] = 'Esiste già una famiglia con questo nome.';
         } else {
             $token = generaTokenUnivoco($db);
-            $ins = $db->prepare("INSERT INTO famiglie (nome_famiglia, token, telefono) VALUES (:nome, :token, :tel)");
+            $ins = $db->prepare("INSERT INTO famiglie (nome_famiglia, token, telefono, lato) VALUES (:nome, :token, :tel, :lato)");
             $ins->execute([
                 'nome'  => $nome_famiglia,
                 'token' => $token,
                 'tel'   => $telefono !== '' ? $telefono : null,
+                'lato'  => $lato,
             ]);
             $messaggi[] = 'Famiglia "' . htmlspecialchars($nome_famiglia) . '" aggiunta con successo (token: ' . $token . ').';
         }
@@ -146,11 +149,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'elimi
 
 // ---- Carica famiglie con i loro invitati ----
 $famiglie = $db->query("
-    SELECT f.id, f.nome_famiglia, f.token, f.telefono,
+    SELECT f.id, f.nome_famiglia, f.token, f.telefono, f.lato,
            COUNT(i.id) AS num_invitati
     FROM famiglie f
     LEFT JOIN invitati i ON i.famiglia_id = f.id
-    GROUP BY f.id, f.nome_famiglia, f.token, f.telefono
+    GROUP BY f.id, f.nome_famiglia, f.token, f.telefono, f.lato
     ORDER BY f.nome_famiglia ASC
 ")->fetchAll();
 
@@ -344,6 +347,14 @@ foreach ($tutti_invitati as $inv) {
                     <label>Telefono (WhatsApp)</label>
                     <input type="text" name="telefono" placeholder="es. 3331234567">
                 </div>
+                <div class="form-group" style="max-width:160px;">
+                    <label>Lato</label>
+                    <select name="lato">
+                        <option value="">— nessuno —</option>
+                        <option value="sposo">🤵 Sposo</option>
+                        <option value="sposa">👰 Sposa</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn-submit">+ Aggiungi famiglia</button>
             </div>
         </form>
@@ -392,6 +403,7 @@ foreach ($tutti_invitati as $inv) {
                 <tr>
                     <th>Famiglia</th>
                     <th>Telefono</th>
+                    <th>Lato</th>
                     <th>Token</th>
                     <th>Invitati</th>
                     <th></th>
@@ -402,6 +414,15 @@ foreach ($tutti_invitati as $inv) {
                 <tr>
                     <td><strong><?= htmlspecialchars($f['nome_famiglia']) ?></strong></td>
                     <td><?= htmlspecialchars($f['telefono'] ?? '—') ?></td>
+                    <td>
+                        <?php if ($f['lato'] === 'sposo'): ?>
+                            <span style="font-size:.8rem;background:#e3f2fd;color:#1565c0;border-radius:4px;padding:.15rem .45rem;">🤵 Sposo</span>
+                        <?php elseif ($f['lato'] === 'sposa'): ?>
+                            <span style="font-size:.8rem;background:#fce4ec;color:#880e4f;border-radius:4px;padding:.15rem .45rem;">👰 Sposa</span>
+                        <?php else: ?>
+                            <span style="color:#bbb;font-size:.85rem;">—</span>
+                        <?php endif; ?>
+                    </td>
                     <td><span class="token-code"><?= htmlspecialchars($f['token']) ?></span></td>
                     <td>
                         <?php $membri = $invitati_per_famiglia[$f['id']] ?? []; ?>

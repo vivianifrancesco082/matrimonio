@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS famiglie (
     token VARCHAR(64) NOT NULL UNIQUE COMMENT 'Token univoco per QR code',
     telefono VARCHAR(20) DEFAULT NULL COMMENT 'Numero di telefono per WhatsApp',
     sended TIMESTAMP NULL DEFAULT NULL COMMENT 'Data/ora invio invito WhatsApp',
+    lato ENUM('sposo','sposa') NULL DEFAULT NULL COMMENT 'Invitato dello sposo o della sposa',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_token (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

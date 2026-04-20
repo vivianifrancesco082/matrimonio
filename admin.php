@@ -89,11 +89,16 @@ define('WA_MESSAGE_SINGLE', "Ciao! \nSei invitato/a al matrimonio di *Francesco 
 
 $db = getDB();
 
-// ---- Migrazione: aggiunge colonna sended se non esiste ----
+// ---- Migrazione: aggiunge colonne mancanti se non esistono ----
 try {
     $db->exec("ALTER TABLE famiglie ADD COLUMN sended TIMESTAMP NULL DEFAULT NULL");
 } catch (PDOException $e) {
-    if ($e->errorInfo[1] !== 1060) throw $e; // 1060 = Duplicate column, ignorato
+    if ($e->errorInfo[1] !== 1060) throw $e;
+}
+try {
+    $db->exec("ALTER TABLE famiglie ADD COLUMN lato ENUM('sposo','sposa') NULL DEFAULT NULL");
+} catch (PDOException $e) {
+    if ($e->errorInfo[1] !== 1060) throw $e;
 }
 
 // ---- Azione AJAX: segna invito come inviato ----
@@ -176,6 +181,12 @@ switch ($filtro) {
     case 'non_inviati':
         $where .= ' AND f.sended IS NULL';
         break;
+    case 'sposo':
+        $where .= " AND f.lato = 'sposo'";
+        break;
+    case 'sposa':
+        $where .= " AND f.lato = 'sposa'";
+        break;
 }
 
 if ($ricerca !== '') {
@@ -186,7 +197,7 @@ if ($ricerca !== '') {
 }
 
 $stmt = $db->prepare("
-    SELECT f.nome_famiglia, f.token, f.telefono, f.sended,
+    SELECT f.nome_famiglia, f.token, f.telefono, f.sended, f.lato,
            i.id, i.nome, i.cognome, i.confermato, i.note, i.risposto_at, i.famiglia_id
     FROM invitati i
     JOIN famiglie f ON f.id = i.famiglia_id
@@ -216,6 +227,7 @@ foreach ($invitati as $inv) {
     $famiglie[$nomeFamiglia]['token'] = $tokenAttuale;
     $famiglie[$nomeFamiglia]['telefono'] = $inv['telefono'];
     $famiglie[$nomeFamiglia]['sended'] = $inv['sended'];
+    $famiglie[$nomeFamiglia]['lato'] = $inv['lato'];
     $famiglie[$nomeFamiglia]['membri'][] = $inv;
 }
 ?>
@@ -288,6 +300,8 @@ foreach ($invitati as $inv) {
         <a href="?filtro=note" class="filter-btn <?= $filtro === 'note' ? 'active' : '' ?>">📝 Con note</a>
         <a href="?filtro=inviati" class="filter-btn <?= $filtro === 'inviati' ? 'active' : '' ?>">✉️ Inviati</a>
         <a href="?filtro=non_inviati" class="filter-btn <?= $filtro === 'non_inviati' ? 'active' : '' ?>">📭 Non inviati</a>
+        <a href="?filtro=sposo" class="filter-btn <?= $filtro === 'sposo' ? 'active' : '' ?>" style="<?= $filtro === 'sposo' ? '' : 'border-color:#90caf9;color:#1565c0;' ?>">🤵 Sposo</a>
+        <a href="?filtro=sposa" class="filter-btn <?= $filtro === 'sposa' ? 'active' : '' ?>" style="<?= $filtro === 'sposa' ? '' : 'border-color:#f48fb1;color:#880e4f;' ?>">👰 Sposa</a>
 
         <div class="search-box">
             <form method="GET">
@@ -308,6 +322,11 @@ foreach ($invitati as $inv) {
         <div class="famiglia-header">
             <div>
                 <span class="famiglia-nome"><?= htmlspecialchars($nome_fam) ?> - <small class="numero-tel"><?= $fam['telefono'] ?></small></span>
+                <?php if ($fam['lato']): ?>
+                    <span style="font-size:.75rem;border-radius:4px;padding:.15rem .45rem;margin-left:.5rem;<?= $fam['lato'] === 'sposo' ? 'background:#e3f2fd;color:#1565c0;' : 'background:#fce4ec;color:#880e4f;' ?>">
+                        <?= $fam['lato'] === 'sposo' ? '🤵 Sposo' : '👰 Sposa' ?>
+                    </span>
+                <?php endif; ?>
                 <?php if ($fam['sended']): ?>
                     <span class="badge inviato" style="font-size:.75rem;background:#e3f2fd;color:#1565c0;border-radius:4px;padding:.15rem .45rem;margin-left:.5rem;">
                         ✉️ <?= date('d/m/Y H:i', strtotime($fam['sended'])) ?>
