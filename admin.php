@@ -101,6 +101,23 @@ try {
     if ($e->errorInfo[1] !== 1060) throw $e;
 }
 
+// ---- Azione AJAX: forza conferma invitato ----
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'forza_conferma') {
+    header('Content-Type: application/json');
+    $inv_id = (int)($_POST['id'] ?? 0);
+    if (!$inv_id) {
+        echo json_encode(['ok' => false, 'error' => 'ID mancante']);
+        exit;
+    }
+    $upd = $db->prepare("UPDATE invitati SET confermato = 1, risposto_at = NOW() WHERE id = :id");
+    $upd->execute(['id' => $inv_id]);
+    $row = $db->prepare("SELECT risposto_at FROM invitati WHERE id = :id");
+    $row->execute(['id' => $inv_id]);
+    $risposto_at = $row->fetchColumn();
+    echo json_encode(['ok' => true, 'risposto_at' => $risposto_at]);
+    exit;
+}
+
 // ---- Azione AJAX: segna invito come inviato ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'segna_inviato') {
     header('Content-Type: application/json');
@@ -298,10 +315,10 @@ foreach ($invitati as $inv) {
         <a href="?filtro=declinati" class="filter-btn <?= $filtro === 'declinati' ? 'active' : '' ?>">✗ Declinati</a>
         <a href="?filtro=attesa" class="filter-btn <?= $filtro === 'attesa' ? 'active' : '' ?>">⏳ In attesa</a>
         <a href="?filtro=note" class="filter-btn <?= $filtro === 'note' ? 'active' : '' ?>">📝 Con note</a>
-        <a href="?filtro=inviati" class="filter-btn <?= $filtro === 'inviati' ? 'active' : '' ?>">✉️ Inviati</a>
-        <a href="?filtro=non_inviati" class="filter-btn <?= $filtro === 'non_inviati' ? 'active' : '' ?>">📭 Non inviati</a>
-        <a href="?filtro=sposo" class="filter-btn <?= $filtro === 'sposo' ? 'active' : '' ?>" style="<?= $filtro === 'sposo' ? '' : 'border-color:#90caf9;color:#1565c0;' ?>">🤵 Sposo</a>
-        <a href="?filtro=sposa" class="filter-btn <?= $filtro === 'sposa' ? 'active' : '' ?>" style="<?= $filtro === 'sposa' ? '' : 'border-color:#f48fb1;color:#880e4f;' ?>">👰 Sposa</a>
+        <a href="?filtro=inviati" class="filter-btn <?= $filtro === 'inviati' ? 'active' : '' ?>">Inviati</a>
+        <a href="?filtro=non_inviati" class="filter-btn <?= $filtro === 'non_inviati' ? 'active' : '' ?>">Non inviati</a>
+        <a href="?filtro=sposo" class="filter-btn <?= $filtro === 'sposo' ? 'active' : '' ?>" style="<?= $filtro === 'sposo' ? '' : 'border-color:#90caf9;color:#1565c0;' ?>">🤵</a>
+        <a href="?filtro=sposa" class="filter-btn <?= $filtro === 'sposa' ? 'active' : '' ?>" style="<?= $filtro === 'sposa' ? '' : 'border-color:#f48fb1;color:#880e4f;' ?>">👰</a>
 
         <div class="search-box">
             <form method="GET">
@@ -324,7 +341,7 @@ foreach ($invitati as $inv) {
                 <span class="famiglia-nome"><?= htmlspecialchars($nome_fam) ?> - <small class="numero-tel"><?= $fam['telefono'] ?></small></span>
                 <?php if ($fam['lato']): ?>
                     <span style="font-size:.75rem;border-radius:4px;padding:.15rem .45rem;margin-left:.5rem;<?= $fam['lato'] === 'sposo' ? 'background:#e3f2fd;color:#1565c0;' : 'background:#fce4ec;color:#880e4f;' ?>">
-                        <?= $fam['lato'] === 'sposo' ? '🤵 Sposo' : '👰 Sposa' ?>
+                        <?= $fam['lato'] === 'sposo' ? '🤵' : '👰' ?>
                     </span>
                 <?php endif; ?>
                 <?php if ($fam['sended']): ?>
@@ -368,13 +385,21 @@ foreach ($invitati as $inv) {
                         <div class="membro-data">Risposta: <?= date('d/m/Y H:i', strtotime($m['risposto_at'])) ?></div>
                     <?php endif; ?>
                 </div>
-                <div>
+                <div style="display:flex;align-items:center;gap:.5rem;">
                     <?php if ($m['risposto_at'] === null): ?>
-                        <span class="badge attesa">In attesa</span>
+                        <span class="badge attesa" id="badge-<?= $m['id'] ?>">In attesa</span>
                     <?php elseif ($m['confermato']): ?>
-                        <span class="badge confermato">Confermato</span>
+                        <span class="badge confermato" id="badge-<?= $m['id'] ?>">Confermato</span>
                     <?php else: ?>
-                        <span class="badge declinato">Declinato</span>
+                        <span class="badge declinato" id="badge-<?= $m['id'] ?>">Declinato</span>
+                    <?php endif; ?>
+                    <?php if (!$m['confermato'] || $m['risposto_at'] === null): ?>
+                        <button class="action-btn" id="btn-conferma-<?= $m['id'] ?>"
+                            style="padding:.25rem .6rem;font-size:.75rem;background:#4caf50;color:#fff;border:none;border-radius:6px;cursor:pointer;"
+                            onclick="forzaConferma(this, <?= $m['id'] ?>)"
+                            title="Conferma manualmente">
+                            ✓ Conferma
+                        </button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -441,6 +466,26 @@ function inviaWhatsApp(btn, waUrl, token) {
                 badge.textContent = '✉️ ' + dataFmt;
                 nomeSpan.appendChild(badge);
             }
+        })
+        .catch(() => {});
+}
+
+function forzaConferma(btn, id) {
+    if (!confirm('Confermare manualmente questo invitato?')) return;
+    const form = new FormData();
+    form.append('action', 'forza_conferma');
+    form.append('id', id);
+
+    fetch('admin.php', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) return;
+            const badge = document.getElementById('badge-' + id);
+            if (badge) {
+                badge.className = 'badge confermato';
+                badge.textContent = 'Confermato';
+            }
+            btn.remove();
         })
         .catch(() => {});
 }

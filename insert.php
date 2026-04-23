@@ -351,8 +351,8 @@ foreach ($tutti_invitati as $inv) {
                     <label>Lato</label>
                     <select name="lato">
                         <option value="">— nessuno —</option>
-                        <option value="sposo">🤵 Sposo</option>
-                        <option value="sposa">👰 Sposa</option>
+                        <option value="sposo">🤵 sposo</option>
+                        <option value="sposa">👰 sposa</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-submit">+ Aggiungi famiglia</button>
@@ -398,7 +398,8 @@ foreach ($tutti_invitati as $inv) {
         <?php if (empty($famiglie)): ?>
             <p class="empty-famiglie">Nessuna famiglia inserita.</p>
         <?php else: ?>
-        <table class="famiglia-table">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="famiglia-table" style="min-width:600px;">
             <thead>
                 <tr>
                     <th>Famiglia</th>
@@ -416,9 +417,9 @@ foreach ($tutti_invitati as $inv) {
                     <td><?= htmlspecialchars($f['telefono'] ?? '—') ?></td>
                     <td>
                         <?php if ($f['lato'] === 'sposo'): ?>
-                            <span style="font-size:.8rem;background:#e3f2fd;color:#1565c0;border-radius:4px;padding:.15rem .45rem;">🤵 Sposo</span>
+                            <span style="font-size:.8rem;background:#e3f2fd;color:#1565c0;border-radius:4px;padding:.15rem .45rem;">🤵</span>
                         <?php elseif ($f['lato'] === 'sposa'): ?>
-                            <span style="font-size:.8rem;background:#fce4ec;color:#880e4f;border-radius:4px;padding:.15rem .45rem;">👰 Sposa</span>
+                            <span style="font-size:.8rem;background:#fce4ec;color:#880e4f;border-radius:4px;padding:.15rem .45rem;">👰</span>
                         <?php else: ?>
                             <span style="color:#bbb;font-size:.85rem;">—</span>
                         <?php endif; ?>
@@ -454,6 +455,7 @@ foreach ($tutti_invitati as $inv) {
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div><!-- /overflow wrapper -->
         <?php endif; ?>
     </div>
 
