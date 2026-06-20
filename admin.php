@@ -306,6 +306,7 @@ foreach ($invitati as $inv) {
             </button>
         </form>
         <a href="insert.php" style="display:inline-block;padding:.55rem 1.1rem;border:1px solid #ddd;border-radius:8px;text-decoration:none;color:#555;font-size:.875rem;">+ Inserisci invitati</a>
+        <a href="export.php" style="display:inline-block;padding:.55rem 1.1rem;background:#2e7d32;color:#fff;border-radius:8px;text-decoration:none;font-size:.875rem;">📥 Scarica confermati (Excel)</a>
     </div>
 
     <!-- Toolbar -->
