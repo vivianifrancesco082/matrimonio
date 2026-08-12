@@ -100,6 +100,11 @@ try {
 } catch (PDOException $e) {
     if ($e->errorInfo[1] !== 1060) throw $e;
 }
+try {
+    $db->exec("ALTER TABLE famiglie ADD COLUMN tipo_invito ENUM('completo','torta') NOT NULL DEFAULT 'completo'");
+} catch (PDOException $e) {
+    if ($e->errorInfo[1] !== 1060) throw $e;
+}
 
 // ---- Azione AJAX: forza conferma invitato ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'forza_conferma') {
@@ -214,7 +219,7 @@ if ($ricerca !== '') {
 }
 
 $stmt = $db->prepare("
-    SELECT f.nome_famiglia, f.token, f.telefono, f.sended, f.lato,
+    SELECT f.nome_famiglia, f.token, f.telefono, f.sended, f.lato, f.tipo_invito,
            i.id, i.nome, i.cognome, i.confermato, i.note, i.risposto_at, i.famiglia_id
     FROM invitati i
     JOIN famiglie f ON f.id = i.famiglia_id
@@ -245,6 +250,7 @@ foreach ($invitati as $inv) {
     $famiglie[$nomeFamiglia]['telefono'] = $inv['telefono'];
     $famiglie[$nomeFamiglia]['sended'] = $inv['sended'];
     $famiglie[$nomeFamiglia]['lato'] = $inv['lato'];
+    $famiglie[$nomeFamiglia]['tipo_invito'] = $inv['tipo_invito'];
     $famiglie[$nomeFamiglia]['membri'][] = $inv;
 }
 ?>
@@ -343,6 +349,11 @@ foreach ($invitati as $inv) {
                 <?php if ($fam['lato']): ?>
                     <span style="font-size:.75rem;border-radius:4px;padding:.15rem .45rem;margin-left:.5rem;<?= $fam['lato'] === 'sposo' ? 'background:#e3f2fd;color:#1565c0;' : 'background:#fce4ec;color:#880e4f;' ?>">
                         <?= $fam['lato'] === 'sposo' ? '🤵' : '👰' ?>
+                    </span>
+                <?php endif; ?>
+                <?php if (($fam['tipo_invito'] ?? 'completo') === 'torta'): ?>
+                    <span style="font-size:.75rem;border-radius:4px;padding:.15rem .45rem;margin-left:.5rem;background:#fff8e1;color:#e65100;">
+                        🎂 solo torta
                     </span>
                 <?php endif; ?>
                 <?php if ($fam['sended']): ?>

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS famiglie (
     telefono VARCHAR(20) DEFAULT NULL COMMENT 'Numero di telefono per WhatsApp',
     sended TIMESTAMP NULL DEFAULT NULL COMMENT 'Data/ora invio invito WhatsApp',
     lato ENUM('sposo','sposa') NULL DEFAULT NULL COMMENT 'Invitato dello sposo o della sposa',
+    tipo_invito ENUM('completo','torta') NOT NULL DEFAULT 'completo' COMMENT 'completo=tutta la giornata, torta=solo taglio torta',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_token (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

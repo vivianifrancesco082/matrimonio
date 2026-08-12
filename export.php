@@ -13,6 +13,7 @@ $db = getDB();
 $rows = $db->query("
     SELECT
         f.lato,
+        f.tipo_invito,
         f.nome_famiglia,
         f.telefono,
         i.nome,
@@ -40,13 +41,15 @@ $out = fopen('php://output', 'w');
 // BOM UTF-8 per Excel
 fwrite($out, "\xEF\xBB\xBF");
 
-fputcsv($out, ['Lato', 'Famiglia', 'Telefono', 'Nome', 'Cognome', 'Note / Allergie', 'Data conferma'], ';');
+fputcsv($out, ['Lato', 'Tipo invito', 'Famiglia', 'Telefono', 'Nome', 'Cognome', 'Note / Allergie', 'Data conferma'], ';');
 
 $latoLabel = ['sposo' => 'Sposo', 'sposa' => 'Sposa'];
+$tipoLabel = ['completo' => 'Completo', 'torta' => 'Solo torta'];
 
 foreach ($rows as $r) {
     fputcsv($out, [
         $latoLabel[$r['lato']] ?? '',
+        $tipoLabel[$r['tipo_invito']] ?? 'Completo',
         $r['nome_famiglia'],
         $r['telefono'],
         $r['nome'],

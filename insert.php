@@ -68,6 +68,13 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 $db = getDB();
 
+// Migrazione: aggiunge tipo_invito se non esiste
+try {
+    $db->exec("ALTER TABLE famiglie ADD COLUMN tipo_invito ENUM('completo','torta') NOT NULL DEFAULT 'completo'");
+} catch (PDOException $e) {
+    if ($e->errorInfo[1] !== 1060) throw $e;
+}
+
 function generaTokenUnivoco($db): string {
     do {
         $token = str_pad((string)random_int(0, 9999999999), 10, '0', STR_PAD_LEFT);
@@ -87,6 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aggiu
     $telefono      = trim($_POST['telefono'] ?? '');
     $lato          = $_POST['lato'] ?? '';
     $lato          = in_array($lato, ['sposo', 'sposa']) ? $lato : null;
+    $tipo_invito   = $_POST['tipo_invito'] ?? 'completo';
+    $tipo_invito   = in_array($tipo_invito, ['completo', 'torta']) ? $tipo_invito : 'completo';
 
     if ($nome_famiglia === '') {
         $errori[] = 'Il nome della famiglia è obbligatorio.';
@@ -98,12 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aggiu
             $errori[] = 'Esiste già una famiglia con questo nome.';
         } else {
             $token = generaTokenUnivoco($db);
-            $ins = $db->prepare("INSERT INTO famiglie (nome_famiglia, token, telefono, lato) VALUES (:nome, :token, :tel, :lato)");
+            $ins = $db->prepare("INSERT INTO famiglie (nome_famiglia, token, telefono, lato, tipo_invito) VALUES (:nome, :token, :tel, :lato, :tipo)");
             $ins->execute([
                 'nome'  => $nome_famiglia,
                 'token' => $token,
                 'tel'   => $telefono !== '' ? $telefono : null,
                 'lato'  => $lato,
+                'tipo'  => $tipo_invito,
             ]);
             $messaggi[] = 'Famiglia "' . htmlspecialchars($nome_famiglia) . '" aggiunta con successo (token: ' . $token . ').';
         }
@@ -149,11 +159,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'elimi
 
 // ---- Carica famiglie con i loro invitati ----
 $famiglie = $db->query("
-    SELECT f.id, f.nome_famiglia, f.token, f.telefono, f.lato,
+    SELECT f.id, f.nome_famiglia, f.token, f.telefono, f.lato, f.tipo_invito,
            COUNT(i.id) AS num_invitati
     FROM famiglie f
     LEFT JOIN invitati i ON i.famiglia_id = f.id
-    GROUP BY f.id, f.nome_famiglia, f.token, f.telefono, f.lato
+    GROUP BY f.id, f.nome_famiglia, f.token, f.telefono, f.lato, f.tipo_invito
     ORDER BY f.nome_famiglia ASC
 ")->fetchAll();
 
@@ -355,6 +365,13 @@ foreach ($tutti_invitati as $inv) {
                         <option value="sposa">👰 sposa</option>
                     </select>
                 </div>
+                <div class="form-group" style="max-width:180px;">
+                    <label>Tipo invito</label>
+                    <select name="tipo_invito">
+                        <option value="completo">🎊 completo</option>
+                        <option value="torta">🎂 solo torta</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn-submit">+ Aggiungi famiglia</button>
             </div>
         </form>
@@ -405,6 +422,7 @@ foreach ($tutti_invitati as $inv) {
                     <th>Famiglia</th>
                     <th>Telefono</th>
                     <th>Lato</th>
+                    <th>Tipo</th>
                     <th>Token</th>
                     <th>Invitati</th>
                     <th></th>
@@ -422,6 +440,13 @@ foreach ($tutti_invitati as $inv) {
                             <span style="font-size:.8rem;background:#fce4ec;color:#880e4f;border-radius:4px;padding:.15rem .45rem;">👰</span>
                         <?php else: ?>
                             <span style="color:#bbb;font-size:.85rem;">—</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if (($f['tipo_invito'] ?? 'completo') === 'torta'): ?>
+                            <span style="font-size:.8rem;background:#fff8e1;color:#e65100;border-radius:4px;padding:.15rem .45rem;">🎂 torta</span>
+                        <?php else: ?>
+                            <span style="font-size:.8rem;background:#e8f5e9;color:#2e7d32;border-radius:4px;padding:.15rem .45rem;">🎊 completo</span>
                         <?php endif; ?>
                     </td>
                     <td><span class="token-code"><?= htmlspecialchars($f['token']) ?></span></td>

@@ -15,7 +15,10 @@
 <body>
 
   <?php
+    require_once 'config.php';
+
     $hidden_info = false;
+    $solo_torta = false;
     $orario_invitati = "16:00";
     $orario_rito = "16:30";
     $orario_cena = "20:00";
@@ -23,23 +26,36 @@
 
     $famiglia = $_GET['famiglia'] ?? '';
     $token = $_GET['token'] ?? '';
+
+    if ($token) {
+      $db = getDB();
+      $stmtFam = $db->prepare("SELECT tipo_invito FROM famiglie WHERE token = ?");
+      $stmtFam->execute([$token]);
+      $famRow = $stmtFam->fetch();
+      $solo_torta = ($famRow && $famRow['tipo_invito'] === 'torta');
+    }
+
     if($token && $famiglia && str_contains($famiglia, " e ")){
-      $invito_modal = "Siete invitati a <br>celebrare con noi";
+      $invito_modal = $solo_torta
+        ? "Siete invitati al <br>taglio della torta"
+        : "Siete invitati a <br>celebrare con noi";
       $wellcome_modal = "Benvenuti";
       $confirm = "Confermate la vostra presenza";
       $si_radio = "Si, ci sarò";
       $no_radio = "Non posso partecipare";
     }
     elseif($token) {
-      $invito_modal = "Sei invitato a <br>celebrare con noi";
+      $invito_modal = $solo_torta
+        ? "Sei invitato al <br>taglio della torta"
+        : "Sei invitato a <br>celebrare con noi";
       $wellcome_modal = "Benvenuto";
       $confirm = "Conferma la tua presenza";
       $si_radio = "Si, ci sarò";
       $no_radio = "Non posso partecipare";
-    }   
+    }
     else {
       $hidden_info = true;
-    } 
+    }
   ?>
 
 <!-- MODALE BENVENUTO -->
@@ -232,9 +248,9 @@
     <div class="section-line"></div>
   </div>
   <div class="details-grid">
-    <?php 
+    <?php
     if(!$hidden_info){
-      ?>
+      if(!$solo_torta){ ?>
       <div class="detail-card">
       <div class="detail-icon">
         <img src="assets/img/forte.png" width="52">
@@ -258,6 +274,7 @@
       <h3 class="detail-title">Cena</h3>
       <p class="detail-time"><?= $orario_cena ?></p>
     </div>
+    <?php } ?>
     <div class="detail-card">
       <div class="detail-icon"><img src="assets/img/torta.png" width="52"></div>
       <h3 class="detail-title">Taglio della torta</h3>
