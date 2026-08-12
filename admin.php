@@ -86,6 +86,8 @@ function generaTokenUnivoco($db): string {
 define('RSVP_BASE_URL', $sitoweb.'index.php');
 define('WA_MESSAGE', "Ciao! \nSiete invitati al matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConfermate la vostra presenza qui:\n{link}\n\nVi aspettiamo con gioia!");
 define('WA_MESSAGE_SINGLE', "Ciao! \nSei invitato/a al matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConferma la tua presenza qui:\n{link}\n\nTi aspettiamo con gioia!");
+define('WA_MESSAGE_TORTA', "Ciao! \nSiete invitati al taglio della torta del matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConfermate la vostra presenza qui:\n{link}\n\nVi aspettiamo con gioia!");
+define('WA_MESSAGE_TORTA_SINGLE', "Ciao! \nSei invitato/a al taglio della torta del matrimonio di *Francesco & Serena* il 27 Settembre 2026.\n\nConferma la tua presenza qui:\n{link}\n\nTi aspettiamo con gioia!");
 
 $db = getDB();
 
@@ -419,7 +421,13 @@ foreach ($invitati as $inv) {
 
             <?php
             $rsvp_link = RSVP_BASE_URL . '?token=' . urlencode($fam['token']) . '&famiglia=' . urlencode($nome_fam);
-            $template = count($fam['membri']) === 1 ? WA_MESSAGE_SINGLE : WA_MESSAGE;
+            $solo_torta = ($fam['tipo_invito'] ?? 'completo') === 'torta';
+            $singolo = count($fam['membri']) === 1;
+            if ($solo_torta) {
+                $template = $singolo ? WA_MESSAGE_TORTA_SINGLE : WA_MESSAGE_TORTA;
+            } else {
+                $template = $singolo ? WA_MESSAGE_SINGLE : WA_MESSAGE;
+            }
             $wa_text = str_replace('{link}', $rsvp_link, $template);
             $telefono = preg_replace('/[^0-9]/', '', $fam['telefono'] ?? '');
             $wa_url = $telefono
